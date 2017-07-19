@@ -21,6 +21,7 @@ RUN set -x \
         ca-certificates \
         curl \
         mariadb-client-libs \
+        sqlite-libs \
     && apk add --no-cache --virtual .build-deps \
         $PROFTPD_DEPS \
     && curl -fSL ftp://ftp.proftpd.org/distrib/source/proftpd-${PROFTPD_VERSION}.tar.gz -o proftpd.tgz \
