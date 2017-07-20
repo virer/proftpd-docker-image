@@ -36,7 +36,7 @@ RUN set -x \
     && sed -i 's/__mempcpy/mempcpy/g' lib/pr_fnmatch.c \
     && ./configure \
         --enable-ctrls --enable-openssl --enable-quotatab --enable-nls \
-        --with-modules=mod_quotatab:mod_sql:mod_quotatab_sql:mod_quotatab_file:mod_ifsession:mod_ctrls_admin:mod_auth_otp:mod_sql_sqlite:mod_sql_mysql:mod_ban:mod_readme:mod_sftp:mod_sftp_sql --enable-nls \
+        --with-modules=mod_tls:mod_quotatab:mod_sql:mod_quotatab_sql:mod_quotatab_file:mod_ifsession:mod_ctrls_admin:mod_auth_otp:mod_sql_sqlite:mod_sql_mysql:mod_ban:mod_readme:mod_sftp:mod_sftp_sql --enable-nls \
     && make \
     && cd /usr/local/proftpd && make install \
     && make clean \
