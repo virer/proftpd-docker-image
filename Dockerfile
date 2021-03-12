@@ -48,7 +48,6 @@ COPY --from=builder /usr/local/ /usr/local/
 COPY proftpd.conf /usr/local/etc/
 COPY ftp.passwd /usr/local/etc/
 COPY ftp.group  /usr/local/etc/
-COPY get-passphrase /usr/local/bin/
 
 RUN set -x \
     && addgroup -Sg 1007 mysftp 2>/dev/null \
