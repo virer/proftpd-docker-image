@@ -1,10 +1,6 @@
-FROM alpine:3.6
+FROM alpine:3.13 AS builder
 
-ENV TERM=xterm
-
-ENV PROFTPD_VERSION 1.3.6
-ENV UID             5001
-ENV GID             82
+ENV PROFTPD_VERSION 1.3.7a
 
 ENV PROFTPD_DEPS \
   g++ \
@@ -20,30 +16,51 @@ RUN set -x \
     && apk add --no-cache --virtual .persistent-deps \
         ca-certificates \
         curl \
-        mariadb-client-libs \
-        sqlite-libs \
+        openssh \
     && apk add --no-cache --virtual .build-deps \
         $PROFTPD_DEPS \
     && curl -fSL ftp://ftp.proftpd.org/distrib/source/proftpd-${PROFTPD_VERSION}.tar.gz -o proftpd.tgz \
     && tar -xf proftpd.tgz \
     && rm proftpd.tgz \
-    && mkdir -p /usr/local \
-    && mv proftpd-${PROFTPD_VERSION} /usr/local/proftpd
+    && mv proftpd-${PROFTPD_VERSION} /opt/build 
 
 RUN set -x \
-    && sleep 1 \
-    && cd /usr/local/proftpd \
+    && cd /opt/build \
     && sed -i 's/__mempcpy/mempcpy/g' lib/pr_fnmatch.c \
     && ./configure \
-        --enable-ctrls --enable-openssl --enable-quotatab --enable-nls \
-        --with-modules=mod_tls:mod_quotatab:mod_sql:mod_quotatab_sql:mod_quotatab_file:mod_ifsession:mod_ctrls_admin:mod_auth_otp:mod_sql_sqlite:mod_sql_mysql:mod_ban:mod_readme:mod_sftp:mod_sftp_sql --enable-nls \
+        --enable-openssl \
+        --with-modules=mod_sftp \
     && make \
-    && cd /usr/local/proftpd && make install \
-    && make clean \
-    && rm -rf /usr/local/proftpd \
-    && apk del .build-deps \
-    && addgroup -Sg 82 www-data 2>/dev/null \
-    && adduser -h /var/www -s /usr/sbin/nologin -H -u 82 -D -G www-data www-data \
-    && rm -rf /var/cache/apk/*
+    && make install 
+
+RUN set -x \
+    && ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N '' \
+    && ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ''
+
+# ************************************************************************
+# Multistage build
+FROM alpine:3.13
+
+# The following line for is for testing purpose only, you should replace it by your own key
+COPY --from=builder /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key /etc/ssh/
+
+COPY --from=builder /usr/local/ /usr/local/
+COPY proftpd.conf /usr/local/etc/
+COPY ftp.passwd /usr/local/etc/
+COPY ftp.group  /usr/local/etc/
+COPY get-passphrase /usr/local/bin/
+
+RUN set -x \
+    && addgroup -Sg 1007 mysftp 2>/dev/null \
+    && adduser -h /var/www -s /usr/sbin/nologin -H -u 1007 -D -G mysftp mysftp \
+    && chmod 400 /usr/local/etc/ftp.passwd /usr/local/etc/ftp.group \
+    && chmod 750 /usr/local/bin/get-passphrase \
+    && chown 0 /usr/local/bin/get-passphrase /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key \
+    && chown 0 /usr/local/etc/ftp.passwd /usr/local/etc/ftp.group 
+
+# For testing inside container purpose only:
+# RUN apk add --no-cache openssh
+
+EXPOSE 2222
 
 CMD ["/usr/local/sbin/proftpd", "-n", "-c", "/usr/local/etc/proftpd.conf" ]
