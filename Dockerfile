@@ -53,8 +53,7 @@ RUN set -x \
     && addgroup -Sg 1007 mysftp 2>/dev/null \
     && adduser -h /var/www -s /usr/sbin/nologin -H -u 1007 -D -G mysftp mysftp \
     && chmod 400 /usr/local/etc/ftp.passwd /usr/local/etc/ftp.group \
-    && chmod 750 /usr/local/bin/get-passphrase \
-    && chown 0 /usr/local/bin/get-passphrase /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key \
+    && chown 0  /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key \
     && chown 0 /usr/local/etc/ftp.passwd /usr/local/etc/ftp.group 
 
 # For testing inside container purpose only:
