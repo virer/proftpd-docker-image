@@ -45,21 +45,22 @@ FROM alpine:3.13
 COPY --from=builder /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key /etc/ssh/
 
 COPY --from=builder /usr/local/ /usr/local/
-COPY proftpd.conf /usr/local/etc/proftpd/
-COPY ftp.passwd /usr/local/etc/ftp/
-COPY ftp.group  /usr/local/etc/ftp/
+COPY . /usr/local/
+
+COPY /bin/entrypoint.sh
 
 RUN set -x \
     && addgroup -Sg 1007 mysftp 2>/dev/null \
     && adduser -h /var/www -s /usr/sbin/nologin -H -u 1007 -D -G mysftp mysftp \
+    && chmod 755 /usr/local/etc/ftp \
     && chmod 400 /usr/local/etc/ftp/ftp.passwd /usr/local/etc/ftp/ftp.group \
     && chown 0   /usr/local/etc/ftp/ftp.passwd /usr/local/etc/ftp/ftp.group \
-    && chown 0 /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key 
+    && chown 0 /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key  \
+    && chmod a+x /usr/local/bin/entrypoint.sh
     
-
 # For testing inside container purpose only:
 # RUN apk add --no-cache openssh
 
 EXPOSE 2222
 
-CMD ["/usr/local/sbin/proftpd", "-n", "-c", "/usr/local/etc/proftpd/proftpd.conf" ]
+CMD ["/usr/local/bin/entrypoint.sh" ]
