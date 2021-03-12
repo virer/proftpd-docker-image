@@ -47,8 +47,6 @@ COPY --from=builder /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key /etc
 COPY --from=builder /usr/local/ /usr/local/
 COPY . /usr/local/
 
-COPY /bin/entrypoint.sh
-
 RUN set -x \
     && addgroup -Sg 1007 mysftp 2>/dev/null \
     && adduser -h /var/www -s /usr/sbin/nologin -H -u 1007 -D -G mysftp mysftp \
