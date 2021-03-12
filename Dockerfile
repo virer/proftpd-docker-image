@@ -45,9 +45,9 @@ FROM alpine:3.13
 COPY --from=builder /etc/ssh/ssh_host_ed25519_key /etc/ssh/ssh_host_rsa_key /etc/ssh/
 
 COPY --from=builder /usr/local/ /usr/local/
-COPY proftpd.conf /usr/local/etc/
-COPY ftp.passwd /usr/local/etc/
-COPY ftp.group  /usr/local/etc/
+COPY proftpd.conf /usr/local/etc/proftpd/
+COPY ftp.passwd /usr/local/etc/ftp/
+COPY ftp.group  /usr/local/etc/ftp/
 
 RUN set -x \
     && addgroup -Sg 1007 mysftp 2>/dev/null \
@@ -61,4 +61,4 @@ RUN set -x \
 
 EXPOSE 2222
 
-CMD ["/usr/local/sbin/proftpd", "-n", "-c", "/usr/local/etc/proftpd.conf" ]
+CMD ["/usr/local/sbin/proftpd", "-n", "-c", "/usr/local/etc/proftpd/proftpd.conf" ]
